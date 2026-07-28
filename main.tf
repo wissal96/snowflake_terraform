@@ -15,24 +15,13 @@ terraform {
       name = "wissal-demo"
     }
   }
-
-
-
-variable "snowflake_user" {
-  description = "Snowflake username"
-  type        = string
-  sensitive   = true
 }
 
-variable "snowflake_password" {
-  description = "Snowflake password"
-  type        = string
-  sensitive   = true
-}
+
+
 provider "snowflake" {
   
-  user     = var.snowflake_user
-  password = var.snowflake_password
+
 }
 
 resource "snowflake_database" "demo_db" {
