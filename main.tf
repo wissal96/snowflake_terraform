@@ -1,12 +1,14 @@
 terraform {
+  required_version = ">= 1.5.0"
+
   required_providers {
     snowflake = {
-      source  = "chanzuckerberg/snowflake"
-      version = "0.25.17"
+      source  = "Snowflake-Labs/snowflake"
+      version = "~> 1.0"
     }
   }
 
-  backend "remote" {
+  cloud {
     organization = "test_terraform_wissal"
 
     workspaces {
@@ -15,60 +17,47 @@ terraform {
   }
 }
 
-provider "snowflake" {
-}
+provider "snowflake" {}
 
 resource "snowflake_database" "demo_db" {
   name    = "DEMO_DB"
-  comment = "Database for Snowflake Terraform demo"
+  comment = "Database created by Terraform"
 }
+
 resource "snowflake_schema" "demo_schema" {
   database = snowflake_database.demo_db.name
   name     = "DEMO_SCHEMA"
-  comment  = "Schema for Snowflake Terraform demo"
+  comment  = "Schema created by Terraform"
 }
-resource "snowflake_table" "sensor" {
-  provider = snowflake
+
+resource "snowflake_table" "weather_json" {
   database = snowflake_database.demo_db.name
   schema   = snowflake_schema.demo_schema.name
   name     = "WEATHER_JSON"
+
   column {
-    name    = "var"
-    type    = "VARIANT"
-    comment = "Raw sensor data"
+    name = "VAR"
+    type = "VARIANT"
   }
 }
-resource "snowflake_file_format" "json" {
-  provider             = snowflake
-  name                 = "JSON_FORMAT"
-  database             = snowflake_database.demo_db.name
-  schema               = snowflake_schema.demo_schema.name
-  format_type          = "JSON"
-  strip_outer_array    = true
-  compression          = "NONE"
-  binary_format        = "HEX"
-  date_format          = "AUTO"
-  time_format          = "AUTO"
-  timestamp_format     = "AUTO"
-  skip_byte_order_mark = true
-}
-resource "snowflake_stage" "example_stage" {
-  name        = "EXAMPLE_STAGE"
-  url         = "s3://snowflake-nse-data/"
-  database    = "DEMO_DB"
-  schema      = "DEMO_SCHEMA"
-  credentials =  "AWS_KEY_ID='${var.access_key}' AWS_SECRET_KEY='${var.secret_key}'"
-}
-resource "snowflake_view" "view" {
-  database = "DEMO_DB"
-  schema   = "DEMO_SCHEMA"
-  name     = "NEW_VIEW"
 
-  comment = "comment"
+resource "snowflake_file_format" "json_format" {
+  name     = "JSON_FORMAT"
+  database = snowflake_database.demo_db.name
+  schema   = snowflake_schema.demo_schema.name
 
-  statement  = <<-SQL
-    select * from WEATHER_JSON;
+  format_type       = "JSON"
+  compression       = "NONE"
+  strip_outer_array = true
+}
+
+resource "snowflake_view" "weather_view" {
+  database = snowflake_database.demo_db.name
+  schema   = snowflake_schema.demo_schema.name
+  name     = "WEATHER_VIEW"
+
+  statement = <<SQL
+SELECT *
+FROM WEATHER_JSON;
 SQL
-  or_replace = false
-  is_secure  = false
 }
