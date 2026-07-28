@@ -7,10 +7,10 @@ terraform {
   }
 
   backend "remote" {
-    organization = "Snowflake_new"
+    organization = "test_terraform_wissal"
 
     workspaces {
-      name = "gh-actions-demo"
+      name = "wissal-demo"
     }
   }
 }
